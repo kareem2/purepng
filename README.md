@@ -1,11 +1,13 @@
 
 **Installing**
+
 - Run `composer install` command to install libraries.
 - Create the database using `purepng.sql` file.
 - Create a folder for images.
 - Create a folder for chache, name it `cache`.
 
 **Configuration**
+
 `config.php` file contains the main config parameter for the scraper, you can change the datatbse credentialsfrom it, here is a sample of configuration parameters:
 ```
 $config['database_host'] = 'localhost'; 
