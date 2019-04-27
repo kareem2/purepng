@@ -11,7 +11,7 @@ use PHPHtmlParser\Dom;
 use CloudflareBypass\RequestMethod\CFCurl;
 
 
-$db = new MysqliDb ('localhost', 'root', '', 'purepng');
+$db = new MysqliDb ($config['database_host'], $config['database_username'], $config['database_password'], $config['database_db_name']);
 
 error_reporting(0);
 

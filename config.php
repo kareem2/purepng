@@ -1,5 +1,10 @@
 <?php
 
+$config['database_host'] = 'localhost';
+$config['database_db_name'] = 'purepng';
+$config['database_username'] = 'root';
+$config['database_password'] = '';
+
 $config['images_folder'] = 'images';
 
 $config['cloudflare_bypass_options'] = 	    
