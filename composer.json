@@ -3,6 +3,7 @@
         "guzzlehttp/guzzle": "*",
         "paquettg/php-html-parser": "^2.0",
         "kyranrana/cloudflare-bypass": "^2.0",
-        "joshcam/mysqli-database-class": "^2.9"
+        "joshcam/mysqli-database-class": "^2.9",
+        "intervention/image": "^2.4"
     }
 }

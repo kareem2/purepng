@@ -9,45 +9,79 @@ use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Handler\CurlHandler;
 use PHPHtmlParser\Dom;
 use CloudflareBypass\RequestMethod\CFCurl;
+use Intervention\Image\ImageManagerStatic as Image;
+
 
 
 $db = new MysqliDb ($config['database_host'], $config['database_username'], $config['database_password'], $config['database_db_name']);
 
-error_reporting(0);
+error_reporting(1);
 
 $args = $argv;
 
 $id = $args[1];
+
+$to_id = $id;
+
+if(isset($args[2]))
+    $to_id = $args[2];
 
 if(!isset($id))
 	die('Enter image id');
 
 
 $images_path = $config['images_folder'];
+$thumbnail_path = $config['thumbnail_folder'];
+
+for($i = $id; $i <= $to_id; $i++){
+    try{
+        echo "scrape post....$i\r\n";
+        if(checkPost($i, $db)){
+            echo "post already scraped\r\n";
+            continue;
+        }
+
+        
+        $data = scrapePost($i);
+
+        if($data == null){
+            echo "no image ~\r\n";
+            continue;
+        }
 
 
-if(checkPost($id, $db)){
-	echo "post already scraped";
-	die();
+        echo "download iamge....\r\n";
+
+        $image_name = slug(time() . ' ' . $data['title']).'.png';//base64_encode($data['title']).$id.'.png';
+        $image_name_path = $images_path.'/'. $image_name;
+        file_put_contents($image_name_path, simpleCurlRrequest($data['main_image_url'])['response']);
+
+
+    
+        $thumbnail =  Image::make($image_name_path);
+
+        $thumbnail->resize(null, 100, function ($constraint) {
+            $constraint->aspectRatio();
+        });
+
+        $thumbnail->save($thumbnail_path.'/'.$image_name);
+
+
+        $data['image_name'] = $image_name;
+
+
+
+        echo "save to the datatabse\r\n";
+        insertPost($data, $db);
+
+        echo "done\r\n\r\n";  
+    }
+    catch(Exception $e){
+        echo "error: " . $e->getMessage() . "\r\n\r\n";
+    }      
 }
 
-echo "scrape post....\r\n";
-$data = scrapePost($id);
 
-
-echo "download iamge....\r\n";
-
-$image_name = base64_encode($data['title']).$id.'.png';
-$image_name_path = $images_path.'/'. $image_name;
-file_put_contents($image_name_path, simpleCurlRrequest($data['main_image_url'])['response']);
-$data['image_name'] = $image_name;
-
-
-
-echo "save to the datatabse\r\n";
-insertPost($data, $db);
-
-echo "done\r\n";
 
 
 
@@ -76,7 +110,9 @@ function scrapePost($post_id){
 
 
 	$data['main_image_url'] = $dom->find('.img-responsive', 0)->src; 
-
+    if($data['main_image_url'] == null)
+        return null;
+//var_dump($data['main_image_url']);
 	foreach ($dom->find('.arrowDownload', 0)->find('a') as $image) {
 		$data['download_image_urls'][] = $image->href;
 	}
@@ -89,7 +125,7 @@ function scrapePost($post_id){
 		$data['publish_on'] = $block->find('.list-group-item', 1)->find('span', 0)->innerHtml;
 		$data['image_type'] = $block->find('.list-group-item', 2)->find('span', 0)->innerHtml;
 		$data['resolution'] = explode('x', $block->find('.list-group-item', 3)->find('span', 0)->innerHtml);
-		$data['category'] = strip_tags($block->find('.list-group-item', 4)->find('span', 0)->innerHtml);
+		$data['category'] = strip_tags($block->find('.list-group-item', 4)->find('span', 0)->find('a', 0)->title);
 		$data['file_size'] = $block->find('.list-group-item', 5)->find('span', 0)->innerHtml;
 
 
@@ -209,14 +245,14 @@ function insertPost($data, $db){
 		$user_id = $db->insert('users', ['name' => $data['username']]);
 	}
 
-	$category_name = strtolower($data['category']);
-	$db->where("name", $category_name);
+	$category_name = $data['category'];
+	$db->where("slug", slug($category_name));
 	$category = $db->getOne("categories");
 	$category_id = $category['id'];
 
 
 	if(is_null($category['id'])){
-		$category_id = $db->insert('categories', ['name' => $category_name, 'label' => $data['category']]);
+		$category_id = $db->insert('categories', ['name' => $category_name, 'slug' => slug($category_name)]);
 	}
 
 
