@@ -14,6 +14,12 @@ use Intervention\Image\ImageManagerStatic as Image;
 
 
 $db = new MysqliDb ($config['database_host'], $config['database_username'], $config['database_password'], $config['database_db_name']);
+// print_r($db->rawQuery("SELECT @@global.time_zone, @@session.time_zone, NOW()"));
+// print_r($db->rawQuery("SET time_zone='{$config['db_timezone']}';"));
+// print_r($db->rawQuery("SELECT @@global.time_zone, @@session.time_zone, NOW()"));
+// die();
+
+// $db->rawQuery("SET time_zone='{$config['db_timezone']}';");
 
 error_reporting(1);
 
@@ -32,6 +38,7 @@ if(!isset($id))
 
 $images_path = $config['images_folder'];
 $thumbnail_path = $config['thumbnail_folder'];
+$avatar_path = $config['avatar_folder'];
 
 for($i = $id; $i <= $to_id; $i++){
     try{
@@ -49,21 +56,33 @@ for($i = $id; $i <= $to_id; $i++){
             continue;
         }
 
+        // $data['avatar'] = 'default.jpg';
+
+        // if($data['user_avatar']){
+
+        //     $image = simpleCurlRrequest($data['user_avatar'])['response'];
+
+        //     $mime = getimagesizefromstring($image)['mime'];
+        //     $mime = explode('/', $mime);
+        //     $mime = $mime[1];
+
+        //     $avatar_name = time() . '-' . $data['username'] . '.' . $mime;
+        //     $data['avatar'] = $avatar_name;
+        //     file_put_contents($avatar_path . '/' . $avatar_name, $image);
+
+        // }
+        //die();
+
 
         echo "download iamge....\r\n";
-
-        $image_name = slug(time() . ' ' . $data['title']).'.png';//base64_encode($data['title']).$id.'.png';
+        $image_name = slug(time() . ' ' . $data['title']).'.png';
         $image_name_path = $images_path.'/'. $image_name;
         file_put_contents($image_name_path, simpleCurlRrequest($data['main_image_url'])['response']);
-
-
     
         $thumbnail =  Image::make($image_name_path);
-
-        $thumbnail->resize(null, 100, function ($constraint) {
+        $thumbnail->resize(null, $config['thumbnail_height'], function ($constraint) {
             $constraint->aspectRatio();
         });
-
         $thumbnail->save($thumbnail_path.'/'.$image_name);
 
 
@@ -103,16 +122,20 @@ function scrapePost($post_id){
 	$data = [];
 	$data['purepng_id'] = $post_id;
 	$data['status'] = $curl_result['http_code'];
-	$data['username'] = strip_tags($dom->find('.text-username', 0)->innerHtml);
+	$data['username'] = trim(strip_tags($dom->find('.text-username', 0)->innerHtml));
 	$data['title'] = $dom->find('h1', 0)->innerHtml;
 	$data['description'] = $dom->find('.description', 0)->innerHtml;
 
+    $avatar_block = $dom->find('.media-object', 0);
+    if($avatar_block){
+        $data['user_avatar'] = $avatar_block->src;     
+    }
 
 
 	$data['main_image_url'] = $dom->find('.img-responsive', 0)->src; 
     if($data['main_image_url'] == null)
         return null;
-//var_dump($data['main_image_url']);
+
 	foreach ($dom->find('.arrowDownload', 0)->find('a') as $image) {
 		$data['download_image_urls'][] = $image->href;
 	}
@@ -120,20 +143,40 @@ function scrapePost($post_id){
 	$block = $dom->find('.col-md-3', 0)->find('ul[class=list-group]', 0);
 
 	if($block){
-		//echo $block->innerHtml;
-
 		$data['publish_on'] = $block->find('.list-group-item', 1)->find('span', 0)->innerHtml;
 		$data['image_type'] = $block->find('.list-group-item', 2)->find('span', 0)->innerHtml;
 		$data['resolution'] = explode('x', $block->find('.list-group-item', 3)->find('span', 0)->innerHtml);
 		$data['category'] = strip_tags($block->find('.list-group-item', 4)->find('span', 0)->find('a', 0)->title);
 		$data['file_size'] = $block->find('.list-group-item', 5)->find('span', 0)->innerHtml;
-
-
 	}
+
+    $stats_block = $dom->find('.list-stats', 0);
+
+    $data['views_count'] = 0;
+    $data['likes_count'] = 0;
+    $data['downloads_count'] = 0;
+    if($stats_block){
+        //$data['publish_on']
+        $views = $stats_block->find('h4', 0)->innerHtml;
+        $liks = $stats_block->find('h4', 1)->innerHtml;
+        $downloads = $stats_block->find('h4', 2)->innerHtml;
+
+        $data['views_count'] = expand_number($views);
+        $data['likes_count'] = expand_number($liks);
+        $data['downloads_count'] = expand_number($downloads);
+    }
 
 	foreach ($dom->find('.colorPalette') as $colorPalette) {
 		$data_title = "data-original-title";
-		$data['color_palette'][] = str_replace(';', '', explode(': ', $colorPalette->style)[1]);
+        $cp = $colorPalette->style;
+
+        $cp = explode(': ', $colorPalette->style);
+        $cp = $cp[1];
+        $cp = str_replace(';', '', $cp);
+        $cp = str_replace('#', '', $cp);
+
+
+		$data['color_palette'][] = $cp;
 	}
 
 	foreach ($dom->find('.tags') as $tag) {
@@ -148,11 +191,30 @@ function scrapePost($post_id){
 	return $data;
 }
 
+function expand_number($number){
+    $units = [
+        'k' => 1000,
+        'K' => 1000,
+        'm' => 1000000,
+        'M' => 1000000,
+    ];
+
+    $unit = $number[strlen($number) - 1];
+
+    if(isset($units[$unit])){
+        $number = str_replace($unit, "", $number);
+
+        return $number * $units[$unit];
+    }
+
+    return preg_replace("/[^0-9]/", "", $number);    
+}
+
 function simpleCurlRrequest($url){
 	global $config;
 	$curl_cf_wrapper = new CFCurl($config['cloudflare_bypass_options']);
 
-	$timeout = 50;
+	$timeout = 120;
 	$no_body = false;
 	$type = 'GET';
 
@@ -235,17 +297,43 @@ function checkPost($purepng_id, $db){
 
 
 function insertPost($data, $db){
+    global $avatar_path;
 
-	$db->where ("name", $data['username']);
+	$db->where ("name", trim($data['username']));
 	$user = $db->getOne("users");
 	$user_id = $user['id'];
 
 
 	if(is_null($user['id'])){
-		$user_id = $db->insert('users', ['name' => $data['username']]);
+
+        $data['avatar'] = 'default.jpg';
+
+        if($data['user_avatar']){
+
+            $avatar_name = explode('/', $data['user_avatar']);
+            $avatar_name = $avatar_name[count($avatar_name) - 1];
+
+
+            $image = simpleCurlRrequest($data['user_avatar'])['response'];
+
+            $mime = getimagesizefromstring($image)['mime'];
+            $mime = explode('/', $mime);
+            $mime = $mime[1];
+
+            //$avatar_name = time() . '-' . $data['username'] . '.' . $mime;
+            $data['avatar'] = $avatar_name;
+            file_put_contents($avatar_path . '/' . $avatar_name, $image);
+
+        }
+
+		$user_id = $db->insert('users', 
+            [
+                'name' => trim($data['username']),
+                'avatar' => $data['avatar'],
+            ]);
 	}
 
-	$category_name = $data['category'];
+	$category_name = trim($data['category']);
 	$db->where("slug", slug($category_name));
 	$category = $db->getOne("categories");
 	$category_id = $category['id'];
@@ -257,17 +345,23 @@ function insertPost($data, $db){
 
 
 
+    $now = date("Y-m-d H:i:s");
 
 	$row = [
 		'purepng_id' => $data['purepng_id'],
 		'user_id' => $user_id,
-		'title' => $data['title'],
+		'title' => trim($data['title']),
 		'description' => $data['description'],
 		'main_image' => $data['image_name'],
-		'image_type' => $data['image_type'],
+        'image_type' => $data['image_type'],
+        'views_count' => $data['views_count'],
+        'likes_count' => $data['likes_count'],
+		'downloads_count' => $data['downloads_count'],
 		'category_id' =>$category_id,
 		'image_width' => $data['resolution'][0],
 		'image_height' => $data['resolution'][1],
+        'created_at' => $now,
+        'updated_at' => $now,
 	];
 
 	$post_id = $db->insert('posts', $row);

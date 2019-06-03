@@ -8,9 +8,15 @@ $config['database_host'] = 'localhost';
 $config['database_db_name'] = 'purepng';
 $config['database_username'] = 'root';
 $config['database_password'] = '';
+$config['php_timezone'] = 'UTC';
+$config['db_timezone'] = '+00:00';
+$config['thumbnail_height'] = '200';
+
+
 
 $config['images_folder'] = '../purepng/public/uploads/large';
 $config['thumbnail_folder'] = '../purepng/public/uploads/thumbnail';
+$config['avatar_folder'] = '../purepng/public/img/avatars';
 
 
 $config['cloudflare_bypass_options'] = 	    
@@ -21,3 +27,5 @@ array(
 	'verbose'       => false                 // Enable verbose? (Good for debugging issues - doesn't effect cURL handle);
 );
 
+
+date_default_timezone_set($config['php_timezone']);
