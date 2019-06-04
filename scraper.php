@@ -56,23 +56,6 @@ for($i = $id; $i <= $to_id; $i++){
             continue;
         }
 
-        // $data['avatar'] = 'default.jpg';
-
-        // if($data['user_avatar']){
-
-        //     $image = simpleCurlRrequest($data['user_avatar'])['response'];
-
-        //     $mime = getimagesizefromstring($image)['mime'];
-        //     $mime = explode('/', $mime);
-        //     $mime = $mime[1];
-
-        //     $avatar_name = time() . '-' . $data['username'] . '.' . $mime;
-        //     $data['avatar'] = $avatar_name;
-        //     file_put_contents($avatar_path . '/' . $avatar_name, $image);
-
-        // }
-        //die();
-
 
         echo "download iamge....\r\n";
         $image_name = slug(time() . ' ' . $data['title']).'.png';
