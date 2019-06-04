@@ -47,11 +47,13 @@ array(
 
 Navigate to the scraper folder and run the following command to scrape a page from purepng:
 > $ php scraper.php 14
-The previous command will scrape the content from:
+
+This command will scrape the content from:
 [https://purepng.com/photo/14](https://purepng.com/photo/14)
 
 You can also pass range of photos IDs like:
 > $ php scraper.php 1 1000
+
 This command will scrape photos starting from 1 to 1000
 
 
