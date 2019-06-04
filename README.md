@@ -12,25 +12,25 @@
 `config.php` file contains the main config parameter for the scraper, you can change the datatbse credentialsfrom it, here is a sample of configuration parameters:
 
 
-`database_host`: database host IP
+`database_host`: database host IP.
 
-`database_db_name`: database name
+`database_db_name`: database name.
 
-`database_username`: db username
+`database_username`: db username.
 
-`database_password`: db password
+`database_password`: db password.
 
-`php_timezone`: preferred server timezone, default: UTC
+`php_timezone`: preferred server timezone, default: UTC.
 
-`db_timezone`: preferred database timezone, default: '+00:00' 
+`db_timezone`: preferred database timezone, default: '+00:00'.
 
 `thumbnail_height` prefereed thumbnail height, default: 200. This parameter will used to create photos thumbnails that will be used for photo preview.
 
 
 
-`images_folder`: main images folder, the scraper will save the images into that folder, example: '../purepng/public/uploads/large'
-`thumbnail_folder` thumbnail folder, example: '../purepng/public/uploads/thumbnail': 
-`avatar_folder`: users avatars folder, example: '../purepng/public/img/avatars': 
+`images_folder`: main images folder, the scraper will save the images into that folder, example: '../purepng/public/uploads/large'.
+`thumbnail_folder` thumbnail folder, example: '../purepng/public/uploads/thumbnail'.
+`avatar_folder`: users avatars folder, example: '../purepng/public/img/avatars'.
 
 
 `cloudflare_bypass_options`: is used for bypassing cloudflare protection.
