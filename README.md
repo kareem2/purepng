@@ -11,7 +11,6 @@
 
 `config.php` file contains the main config parameter for the scraper, you can change the datatbse credentialsfrom it, here is a sample of configuration parameters:
 
-
 `database_host`: database host IP.
 
 `database_db_name`: database name.
@@ -27,7 +26,9 @@
 `thumbnail_height` prefereed thumbnail height, default: 200. This parameter will used to create photos thumbnails that will be used for photo preview.
 
 `images_folder`: main images folder, the scraper will save the images into that folder, example: '../purepng/public/uploads/large'.
+
 `thumbnail_folder` thumbnail folder, example: '../purepng/public/uploads/thumbnail'.
+
 `avatar_folder`: users avatars folder, example: '../purepng/public/img/avatars'.
 
 
