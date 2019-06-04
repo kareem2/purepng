@@ -1,4 +1,5 @@
 
+
 **Installing**
 
 - Run `composer install` command to install libraries.
@@ -12,11 +13,17 @@
 
 
 `database_host`: database host IP
+
 `database_db_name`: database name
+
 `database_username`: db username
+
 `database_password`: db password
+
 `php_timezone`: preferred server timezone, default: UTC
+
 `db_timezone`: preferred database timezone, default: '+00:00' 
+
 `thumbnail_height` prefereed thumbnail height, default: 200. This parameter will used to create photos thumbnails that will be used for photo preview.
 
 
